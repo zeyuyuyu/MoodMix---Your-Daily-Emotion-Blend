@@ -1,34 +1,51 @@
 import random
-import hashlib
-import time
-import socket
+import asyncio
+import websockets
 
 class PeerDiscovery:
     def __init__(self, mesh_address, mesh_port):
         self.mesh_address = mesh_address
         self.mesh_port = mesh_port
         self.peers = set()
-        self.last_discovery = 0
+        self.discovery_task = None
 
-    def discover_peers(self):
-        if time.time() - self.last_discovery < 60:
-            return
-        self.last_discovery = time.time()
+    async def start_discovery(self):
+        self.discovery_task = asyncio.create_task(self.discover_peers())
+        await self.discovery_task
 
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        message = f'MoodMix-Discover-{hashlib.sha256(str(random.randint(0, 1000000)).encode()).hexdigest()}'
-        sock.sendto(message.encode(), ('255.255.255.255', self.mesh_port))
-
+    async def discover_peers(self):
         while True:
-            try:
-                data, addr = sock.recvfrom(1024)
-                if data.decode().startswith('MoodMix-Peer-'):
-                    peer_id = data.decode().split('-')[2]
-                    self.peers.add(peer_id)
-            except socket.timeout:
-                break
+            # Discover new peers
+            new_peers = await self.find_new_peers()
+            self.peers.update(new_peers)
 
-    def get_peers(self):
-        self.discover_peers()
-        return self.peers
+            # Connect to new peers
+            await self.connect_to_peers(new_peers)
+
+            # Wait for a random interval before the next discovery cycle
+            await asyncio.sleep(random.uniform(10, 30))
+
+    async def find_new_peers(self):
+        async with websockets.connect(f'ws://{self.mesh_address}:{self.mesh_port}/peers') as websocket:
+            # Request a list of known peers from the mesh network
+            await websocket.send('GET_PEERS')
+            peer_addresses = await websocket.recv()
+
+        new_peers = set()
+        for peer_address in peer_addresses.split(','):
+            if peer_address not in self.peers:
+                new_peers.add(peer_address)
+
+        return new_peers
+
+    async def connect_to_peers(self, new_peers):
+        for peer_address in new_peers:
+            try:
+                async with websockets.connect(f'ws://{peer_address}/connect') as websocket:
+                    # Perform handshake and establish connection with the new peer
+                    await websocket.send('HELLO')
+                    response = await websocket.recv()
+                    if response == 'WELCOME':
+                        print(f'Connected to new peer: {peer_address}')
+            except websockets.exceptions.ConnectionError:
+                print(f'Failed to connect to peer: {peer_address}')
