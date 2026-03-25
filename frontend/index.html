@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwarmPredict - Social Prediction Games</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="container mx-auto px-4 py-8">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">SwarmPredict</h1>
+            <div class="flex items-center space-x-4">
+                <span class="text-2xl">🏆 <span id="points" class="text-yellow-400">0</span></span>
+                <button id="share" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-full">Share & Earn 50 Points</button>
+            </div>
+        </header>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg animate__animated animate__fadeIn">
+                <h2 class="text-2xl font-bold mb-4">🔥 Trending Predictions</h2>
+                <div id="predictions" class="space-y-4">
+                    <div class="prediction-card bg-gray-700 p-4 rounded-lg cursor-pointer hover:bg-gray-600 transition">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xl">Bitcoin Price Tomorrow</h3>
+                            <span class="text-green-400">+500 pts</span>
+                        </div>
+                        <div class="mt-2 flex justify-between items-center">
+                            <div class="space-x-2">
+                                <button class="bg-green-500 hover:bg-green-600 px-3 py-1 rounded">⬆️ Up</button>
+                                <button class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded">⬇️ Down</button>
+                            </div>
+                            <span class="text-sm">12,421 players</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg animate__animated animate__fadeIn">
+                <h2 class="text-2xl font-bold mb-4">🏆 Leaderboard</h2>
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center bg-gray-700 p-3 rounded">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-yellow-400">1</span>
+                            <img src="https://api.dicebear.com/6.x/avataaars/svg?seed=1" class="w-8 h-8 rounded-full">
+                            <span>CryptoKing</span>
+                        </div>
+                        <span class="text-yellow-400">24,392 pts</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 bg-gray-800 p-6 rounded-xl shadow-lg animate__animated animate__fadeIn">
+            <h2 class="text-2xl font-bold mb-4">🎯 Your Predictions</h2>
+            <canvas id="predictionChart" class="w-full h-64"></canvas>
+        </div>
+
+        <div class="fixed bottom-4 right-4 animate__animated animate__bounceIn">
+            <button class="bg-pink-600 hover:bg-pink-700 p-4 rounded-full shadow-lg flex items-center space-x-2">
+                <span>🎲</span>
+                <span>Create Prediction</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Gamification features
+        let points = 0;
+        document.getElementById('share').addEventListener('click', () => {
+            points += 50;
+            document.getElementById('points').textContent = points;
+            showReward();
+        });
+
+        function showReward() {
+            const reward = document.createElement('div');
+            reward.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-4xl animate__animated animate__bounceIn';
+            reward.textContent = '+50 🌟';
+            document.body.appendChild(reward);
+            setTimeout(() => reward.remove(), 1000);
+        }
+
+        // Initialize prediction chart
+        const ctx = document.getElementById('predictionChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+                datasets: [{
+                    label: 'Accuracy',
+                    data: [75, 82, 78, 85, 90],
+                    borderColor: 'rgb(147, 51, 234)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
